@@ -41,4 +41,5 @@
 .board-wrap.clear-pop{animation:clear-gentle .32s ease-out}
 @keyframes clear-gentle{0%,100%{transform:scale(1)}45%{transform:scale(1.006)}}
 @media(prefers-reduced-motion:reduce){.board-wrap.clear-pop{animation:none}}
+.overlay-ranking{margin-right:6px}.overlay-ranking[hidden]{display:none}
 
