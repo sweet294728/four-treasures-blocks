@@ -51,4 +51,9 @@
 /* Keep the information rail and board aligned as one compact play area. */
 .play-layout{align-items:stretch;grid-template-columns:92px minmax(0,1fr);gap:6px}.scorebar{height:100%;min-height:0}.board-wrap{width:100%;justify-self:stretch}.scorebar>div:last-child{border-bottom:0}
 @media(max-width:420px){.play-layout{grid-template-columns:52px minmax(0,1fr);gap:5px}.scorebar{padding:4px}.scorebar>div{padding:6px 3px}.scorebar small{font-size:10px}.scorebar strong{font-size:15px}.scorebar .next{padding:7px 2px}.next canvas{max-height:65px}.overlay-card{max-height:96%}.team{height:65px;margin-bottom:5px}.team img{height:60px}.overlay h2{font-size:18px}.overlay p{margin:3px 0 5px;font-size:11px}.mode-options span{min-height:69px}.primary{min-height:38px;margin-top:7px;padding:7px}.overlay-card .start-hint{margin-top:5px}.secondary{margin-top:5px;padding:7px 10px}}
+/* The results screen prioritizes the prize wheel, then score submission. */
+.result-screen .coupon-button{background:#f6b648;color:#263652;min-height:44px;font-size:15px;font-weight:900;box-shadow:0 4px 10px #d7983a38}
+.result-screen .result-input button{background:#d8eaf5;color:#263f60;min-height:40px;font-size:14px;font-weight:900}
+.result-screen #start{background:#edf1f6;color:#52617a;box-shadow:none;min-height:38px;font-size:14px;margin-top:8px}
+.result-screen #start:hover{background:#e2e9f1}.result-screen .coupon-button:hover{background:#ffc763}
 
