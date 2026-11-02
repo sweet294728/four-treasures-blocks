@@ -37,10 +37,11 @@ document.querySelector('#restart').addEventListener('click',showMenu);menu.addEv
 resultForm.addEventListener('submit',e=>{e.preventDefault();if(saved){resultStatus.textContent='這局成績已登錄。';return}const name=nickname.value.trim();if(!name){resultStatus.textContent='請輸入暱稱。';return}if(/[\u0000-\u001f\u007f]/.test(name)||/^[=+\-@]/.test(name)){resultStatus.textContent='暱稱包含無法使用的字元。';return}if(!golden&&name.normalize('NFKC').toUpperCase()==='DKEC'){goldenNext=true;resultStatus.textContent='黃金模式已啟動，下一局分數為 1.5 倍！';return}player=golden?'DKEC':name;saveResult();resultStatus.textContent='成績已登錄本機排行榜！'});
 document.addEventListener('keydown',e=>{if(e.target&&['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;const map={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'rotateRight',x:'rotateRight',X:'rotateRight',z:'rotateLeft',Z:'rotateLeft',ArrowDown:'down',' ':'drop',p:'pause',P:'pause'};if(map[e.key]){e.preventDefault();action(map[e.key])}});
 let touch=null;const boardArea=document.querySelector('.board-area');
-// Suppress Safari's double-tap zoom and long-press menu only on the active game canvas.
-canvas.addEventListener('touchend',e=>{if(state==='playing'&&e.cancelable)e.preventDefault()},{passive:false});
-canvas.addEventListener('contextmenu',e=>{if(state==='playing')e.preventDefault()});
-canvas.addEventListener('selectstart',e=>{if(state==='playing')e.preventDefault()});
+// Keep Safari and in-app browsers from treating repeated game taps as page gestures.
+const playSurface=document.querySelector('.board-wrap'), hint=document.querySelector('.hint');
+function isPlayTouch(e){return state==='playing'&&(playSurface.contains(e.target)||hint.contains(e.target))}
+for(const type of ['touchstart','touchend'])document.addEventListener(type,e=>{if(isPlayTouch(e)&&e.cancelable)e.preventDefault()},{passive:false});
+for(const type of ['contextmenu','selectstart'])document.addEventListener(type,e=>{if(isPlayTouch(e))e.preventDefault()});
 boardArea.addEventListener('pointerdown',e=>{if(state!=='playing'||e.button!==0)return;e.preventDefault();boardArea.setPointerCapture(e.pointerId);const cell=canvas.getBoundingClientRect().width/10;touch={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,cell,moved:false,long:false};touch.timer=setTimeout(()=>{if(touch&&!touch.moved&&state==='playing'){touch.long=true;action('drop')}},500)});
 boardArea.addEventListener('pointermove',e=>{if(!touch||touch.id!==e.pointerId||touch.long)return;const t=touch;if(Math.hypot(e.clientX-t.x,e.clientY-t.y)>Math.max(8,t.cell*.35)){t.moved=true;clearTimeout(t.timer)}let dx=Math.trunc((e.clientX-t.lastX)/t.cell),dy=Math.trunc((e.clientY-t.lastY)/t.cell);while(dx>0){action('right');t.lastX+=t.cell;dx--}while(dx<0){action('left');t.lastX-=t.cell;dx++}while(dy>0){action('down');t.lastY+=t.cell;dy--}if(dy<0)t.lastY=e.clientY});
 function endPointer(e,cancelled=false){if(!touch||touch.id!==e.pointerId)return;clearTimeout(touch.timer);if(!cancelled&&!touch.moved&&!touch.long)action('rotateRight');touch=null}boardArea.addEventListener('pointerup',e=>endPointer(e));boardArea.addEventListener('pointercancel',e=>endPointer(e,true));
