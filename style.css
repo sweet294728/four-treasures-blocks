@@ -30,3 +30,7 @@
 .board-wrap.clear-pop{animation:clear-pop .5s cubic-bezier(.2,.8,.2,1)}.score-pop{animation:score-pop .5s cubic-bezier(.2,1.4,.4,1)}@keyframes score-pop{0%{transform:scale(1);color:#293252}35%{transform:scale(1.3);color:#d5861c}100%{transform:scale(1);color:#293252}}
 .feedback.show{animation:feedback-pop .85s cubic-bezier(.2,.8,.2,1) both;font-size:clamp(20px,5.5vw,32px);text-shadow:0 3px 0 #a75b20,0 6px 14px #111a2e}@keyframes feedback-pop{0%{opacity:0;transform:translate(-50%,-20%) scale(.35) rotate(-5deg)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.2) rotate(2deg)}45%{transform:translate(-50%,-55%) scale(.96) rotate(0)}70%{opacity:1;transform:translate(-50%,-65%) scale(1)}100%{opacity:0;transform:translate(-50%,-100%) scale(1.05)}}
 @media(prefers-reduced-motion:reduce){.score-pop,.board-wrap.clear-pop,.feedback.show{animation:none}.feedback.show{opacity:1}}
+/* Keep gestures on the game board from selecting the canvas or invoking iOS callouts. */
+.board-area,#board{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+.overlay,.overlay-card{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:auto}
+
