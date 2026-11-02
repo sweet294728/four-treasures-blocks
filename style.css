@@ -36,4 +36,5 @@
 /* The hint is adjacent to the board and can be touched during fast play. */
 .board-wrap,.hint{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 @media(max-width:420px){.toolbar{gap:3px}.toolbar button{font-size:10px;padding:9px 2px}}
+.overlay-card .start-hint{margin:9px 0 0;color:#53627b;font-size:11px;font-weight:700;line-height:1.5;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.start-hint[hidden]{display:none}@media(max-height:550px){.overlay-card .start-hint{margin-top:4px}}
 
