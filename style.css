@@ -48,4 +48,7 @@
 .coupon-button{display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:14px}.coupon-button:focus-visible{outline:3px solid #568cc1;outline-offset:2px}
 /* Large touch targets in the requested three-above, two-below layout. */
 .controls{grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}.controls button{grid-column:span 2;min-height:56px;font-size:24px;touch-action:manipulation}.controls button:nth-child(4),.controls button:nth-child(5){grid-column:span 3}.controls button:nth-child(3){background:#f6b648}.controls button:last-child{background:#fff}.controls button small{font-size:11px}@media(max-width:420px){.controls button{min-height:54px}}
+/* Keep the information rail and board aligned as one compact play area. */
+.play-layout{align-items:stretch;grid-template-columns:92px minmax(0,1fr);gap:6px}.scorebar{height:100%;min-height:0}.board-wrap{width:100%;justify-self:stretch}.scorebar>div:last-child{border-bottom:0}
+@media(max-width:420px){.play-layout{grid-template-columns:52px minmax(0,1fr);gap:5px}.scorebar{padding:4px}.scorebar>div{padding:6px 3px}.scorebar small{font-size:10px}.scorebar strong{font-size:15px}.scorebar .next{padding:7px 2px}.next canvas{max-height:65px}.overlay-card{max-height:96%}.team{height:65px;margin-bottom:5px}.team img{height:60px}.overlay h2{font-size:18px}.overlay p{margin:3px 0 5px;font-size:11px}.mode-options span{min-height:69px}.primary{min-height:38px;margin-top:7px;padding:7px}.overlay-card .start-hint{margin-top:5px}.secondary{margin-top:5px;padding:7px 10px}}
 
