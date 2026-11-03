@@ -1,5 +1,5 @@
 /* Dedicated online leaderboard for 跳台挑戰. Set this to its own deployed Apps Script URL. */
-window.JUMP_LEADERBOARD_ENDPOINT = '';
+window.JUMP_LEADERBOARD_ENDPOINT = 'https://script.google.com/macros/s/AKfycbysdXYLgqBurjrfwR1kAC7urcxRm46eKLmotDyjZc3EmWsAP1WFSG9HJcAcBO7J-GJw/exec';
 window.JumpLeaderboard = (() => {
   let sequence=0;
   function endpoint(){let value=String(window.JUMP_LEADERBOARD_ENDPOINT||'').trim();if(!value)throw new Error('排行榜尚未設定，請稍後再試。');let url=new URL(value);if(url.protocol!=='https:'||url.hostname!=='script.google.com')throw new Error('排行榜設定錯誤');return url}
