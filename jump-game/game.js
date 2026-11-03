@@ -37,15 +37,27 @@
   function platform(x,y,appear=1,type='normal',previous=null){
     let cols=3,rows=3;if(previous&&type!=='spike'){let roll=Math.random();if(roll<.20){cols=2;rows=2}else if(roll<.55){if(Math.random()<.5)cols=2;else rows=2}}
     let p={x,y,width:w*.31,cols,rows,appear,type,elapsed:0,bonus:false,broken:false,injured:false,diamond:null,spike:null};
-    if(previous){if(Math.random()<.4){let q=gridPoint(p,(Math.random()-.5)*.8,(Math.random()-.5)*.8);p.diamond={x:q.x,y:q.y,collected:false}}
-      if(type==='spike'){p.spike=selectSpikeLayout(previous,p);if(p.diamond){let safeRows=[-1,0,1].filter(r=>r!==p.spike.row),fixed=safeRows[Math.floor(Math.random()*safeRows.length)]*2/3,other=(Math.floor(Math.random()*3)-1)*2/3,u=p.spike.axis==='u'?fixed:other,v=p.spike.axis==='v'?fixed:other,q=gridPoint(p,u,v);p.diamond.x=q.x;p.diamond.y=q.y}}}return p}
+    if(previous&&type==='spike')p.spike=selectSpikeLayout(previous,p);return p}
+  // Choose points on the actual jump line, within the charge range and away from spikes.
+  function placeDiamond(source,target,origin){
+    if(Math.random()>=.4)return;
+    let dx=target.x-origin.x,dy=target.y-origin.y,d=Math.hypot(dx,dy),range=maxJumpRange(source,target);if(!d)return;
+    let candidates=[];
+    for(let i=0;i<=400;i++){
+      let distance=range*i/400,x=origin.x+dx/d*distance,y=origin.y+dy/d*distance,q=gridAt(target,x,y);
+      if(Math.abs(q.u)>.84||Math.abs(q.v)>.84||hitSpike(target,x,y))continue;
+      if(target.spike){let fixed=target.spike.axis==='u'?q.u:q.v,spikeCenter=target.spike.row*2/3;if(Math.abs(fixed-spikeCenter)<.47)continue}
+      candidates.push({x,y});
+    }
+    if(candidates.length){let point=candidates[Math.floor(Math.random()*candidates.length)];target.diamond={...point,collected:false}}
+  }
   function nextPlatform(origin){
     let last=platforms[platforms.length-1],dir=last.x>w*.57?-1:last.x<w*.43?1:(Math.random()<.5?-1:1),distance=.18+Math.random()*.19;
     let x=clamp(last.x+dir*w*distance,w*.19,w*.81),y=last.y-h*(.105+(distance-.18)*.48);generationCount++;
     // Every fourth platform has its near edge at 96% of maximum range from the actual takeoff point.
     let far=generationCount%4===0;if(far){let from=origin||last,dx=x-from.x,half=w*.31*.5,depth=w*.31*.26,range=h*.37,lo=0,hi=h*.6;
       for(let i=0;i<40;i++){let dy=(lo+hi)/2,d=Math.hypot(dx,dy),edge=d?d-1/(Math.abs(dx/d)/half+Math.abs(dy/d)/depth):0;if(edge<range*.96)lo=dy;else hi=dy}y=from.y-(lo+hi)/2}
-    let types=far?['normal','repeat','wait','break']:['normal','normal','repeat','wait','break','spike'],type=types[Math.floor(Math.random()*types.length)],result=platform(x,y,0,type,last);if(far&&result.diamond){let q=gridPoint(result,.15,-.15);result.diamond.x=q.x;result.diamond.y=q.y}return result
+    let types=far?['normal','repeat','wait','break']:['normal','normal','repeat','wait','break','spike'],type=types[Math.floor(Math.random()*types.length)],result=platform(x,y,0,type,last);placeDiamond(last,result,origin||last);return result
   }
   function reset(){goldenMode=!practiceMode&&goldenNext;rankSaved=false;rankSubmitting=false;runId++;score=0;lives=3;combo=0;time=0;particles=[];impact=0;shake=0;generationCount=0;paused=false;notice='';noticeTime=0;recovery=null;charging=false;charge=0;jump=null;flash=0;cameraX=0;cameraY=0;oldPlatform=null;platforms=[platform(w*.5,h*.70)];platforms.push(nextPlatform());platforms[1].appear=1;player={x:platforms[0].x,y:platforms[0].y};state='playing';ui.hint.textContent='輕點小跳，長按蓄力跳得更遠';ui.overlay.classList.add('hidden');document.getElementById('mode-badge').hidden=!practiceMode&&!goldenMode;document.getElementById('mode-badge').textContent=practiceMode?'練習模式・落點提示':'黃金模式・分數 ×5';document.getElementById('pause-label').textContent='暫停';document.getElementById('pause-icon').classList.remove('resume');document.getElementById('pause').setAttribute('aria-label','暫停');if(soundEnabled)ensureAudio();musicNextAt=0;musicStep=0;audioState();updateUI()}
   function updateUI(){ui.score.textContent=score;ui.combo.textContent=combo>1?'🔥 '+combo+' 連擊':'';ui.time.textContent=Math.floor(time);ui.lives.setAttribute('aria-label','剩餘生命 '+lives);ui.lives.querySelectorAll('.heart').forEach((heart,i)=>heart.classList.toggle('empty',i>=lives));document.getElementById('pause').disabled=state!=='playing'}
