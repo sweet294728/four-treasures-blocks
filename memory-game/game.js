@@ -145,7 +145,7 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopMusic(); else if (musicStarted) startMusic(); });
   const soundButton = document.getElementById('sound');
   soundButton.addEventListener('click', () => { soundOn = !soundOn; soundButton.textContent = soundOn ? '音效：開 ♪' : '音效：關'; soundButton.setAttribute('aria-pressed', String(soundOn)); if (soundOn) sound([[523,0,.12]]); });
-  document.getElementById('start').addEventListener('click', start); document.getElementById('restart').addEventListener('click', start);
+  document.getElementById('start').addEventListener('click', start);
   document.getElementById('play-again').addEventListener('click', start);
   document.getElementById('choose-again').addEventListener('click', () => chooseDifficulty());
   function chooseDifficulty(nextSize = size) {
@@ -205,6 +205,7 @@
   });
   difficultyButtons.forEach(button => button.addEventListener('click', () => chooseDifficulty(Number(button.dataset.size)))); chooseDifficulty();
 })();
+
 
 
 
