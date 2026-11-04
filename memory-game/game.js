@@ -6,7 +6,8 @@
   const difficultyButtons = [...document.querySelectorAll('.difficulty-button')];
   const setupPanel = document.getElementById('setup-panel'), resultPanel = document.getElementById('result-panel');
   const levels = { 4: { pairs: 8, seconds: 60 }, 6: { pairs: 18, seconds: 60 }, 8: { pairs: 32, seconds: 60 } };
-  let size = 4;
+  let paused = false, pausedAt = 0;
+  let size = 4, goldenNext = false, goldenMode = false, resultScore = 0, resultSize = 4, runId = 0, rankSaved = false, rankSubmitting = false, rankingOrigin = 'setup', rankRequest = 0;
   function level() { return levels[size]; }
   function bestKey() { return size === 4 ? 'dkec-memory-best' : 'dkec-memory-best-' + size; }
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -91,7 +92,11 @@
     const elapsed = Math.max(0, Math.floor((Date.now() - startedAt) / 1000)); timeEl.innerHTML = `${elapsed} <em>秒</em>`;
     if (win && (best() === null || elapsed < Number(best()))) { try { localStorage.setItem(bestKey(), String(elapsed)); } catch {} }
     const extraMoves = Math.max(0, moves - level().pairs);
-    const score = level().pairs * 100 + Math.max(0, level().pairs * 100 - elapsed * 5 - extraMoves * 20);
+    const score = (level().pairs * 100 + Math.max(0, level().pairs * 100 - elapsed * 5 - extraMoves * 20)) * (goldenMode ? 5 : 1);
+    resultScore = score; resultSize = size; rankSaved = false; rankSubmitting = false;
+    document.getElementById('rank-name').value = goldenMode ? 'DKEC' : ''; document.getElementById('rank-name').readOnly = goldenMode;
+    document.getElementById('rank-submit').disabled = false; document.getElementById('rank-submit').textContent = '登錄';
+    document.getElementById('rank-message').textContent = goldenMode ? '黃金模式：分數 ×5' : '';
     document.getElementById('result-score').textContent = score;
     document.getElementById('result-details').textContent = size + ' × ' + size + '　・　' + elapsed + ' 秒　・　' + moves + ' 次翻牌';
     setupPanel.hidden = true; resultPanel.hidden = false;
@@ -122,7 +127,9 @@
   }
   function start() {
     musicStarted = true; startMusic();
+    goldenMode = goldenNext; goldenNext = false; runId++; document.getElementById('golden-badge').hidden = !goldenMode;
     clearInterval(timer); clearTimeout(mismatch); clearTimeout(dealTimer); clearTimeout(finishTimer);
+    paused = false; document.getElementById('pause-panel').hidden = true; document.getElementById('ranking-panel').hidden = true;
     running = false; dealing = true; cards = shuffle(Array.from({length: level().pairs}, (_, i) => ['d','k','e','c'][i % 4]).flatMap(id => [{id,up:false,done:false},{id,up:false,done:false}]));
     open = []; matched = 0; moves = 0; overlay.hidden = true; stats(); timeEl.innerHTML = '0 <em>秒</em>';   board.style.setProperty('--columns', size); makeBoard();
     board.classList.remove('dealing'); void board.offsetWidth; board.classList.add('dealing'); sound([[392,0,.1],[523,.08,.15]]);
@@ -143,6 +150,7 @@
   document.getElementById('choose-again').addEventListener('click', () => chooseDifficulty());
   function chooseDifficulty(nextSize = size) {
     clearInterval(timer); clearTimeout(mismatch); clearTimeout(dealTimer); clearTimeout(finishTimer);
+    paused = false; document.getElementById('pause-panel').hidden = true; document.getElementById('golden-badge').hidden = true;
     size = nextSize; difficultyButtons.forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.size) === size))); running = false; dealing = false; open = []; matched = 0; moves = 0;
     cards = Array.from({length:size * size}, () => ({id:'d',up:false,done:false}));
     board.style.setProperty('--columns', size); board.classList.remove('dealing'); board.dataset.size = size;
@@ -151,10 +159,55 @@
     document.getElementById('modal-title').textContent = '準備好了嗎？';
     document.getElementById('modal-text').textContent = `找出 ${level().pairs} 組相同的四寶，挑戰最快時間！`;
     document.getElementById('start').innerHTML = '開始遊戲 <span>→</span>';
-    setupPanel.hidden = false; resultPanel.hidden = true; overlay.hidden = false; showBest();
+    setupPanel.hidden = false; resultPanel.hidden = true; document.getElementById('ranking-panel').hidden = true; overlay.hidden = false; document.getElementById('golden-hint').hidden = !goldenNext; showBest();
   }
+  const rankingPanel = document.getElementById('ranking-panel'), rankStatus = document.getElementById('rank-status'), rankList = document.getElementById('rank-list');
+  let rankSize = 4;
+  function loadRanking() {
+    const request = ++rankRequest; rankStatus.textContent = '排行榜讀取中…'; rankList.replaceChildren();
+    document.querySelectorAll('[data-rank-size]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.rankSize) === rankSize)));
+    window.MemoryLeaderboard.read().then(data => {
+      if (request !== rankRequest) return;
+      const rows = data.records.filter(r => String(r.difficulty) === String(rankSize)).slice(0, 20);
+      rankStatus.textContent = rows.length ? '每個暱稱顯示最高分・前 20 名' : '目前還沒有成績，快來挑戰！';
+      rows.forEach((r, i) => { const row = document.createElement('div'), name = document.createElement('span'), points = document.createElement('b'); row.className = 'rank-row'; name.textContent = `${i + 1}. ${r.name}${r.golden ? ' ✨' : ''}`; points.textContent = `${Number(r.score).toLocaleString()} 分`; row.append(name, points); rankList.append(row); });
+    }).catch(err => { if (request === rankRequest) rankStatus.textContent = err.message || '排行榜讀取失敗。'; });
+  }
+  function openRanking(origin) { rankingOrigin = origin; rankSize = origin === 'result' ? resultSize : size; setupPanel.hidden = true; resultPanel.hidden = true; document.getElementById('pause-panel').hidden = true; rankingPanel.hidden = false; loadRanking(); }
+  document.getElementById('setup-ranking').addEventListener('click', () => openRanking('setup'));
+  document.getElementById('result-ranking').addEventListener('click', () => openRanking('result'));
+  document.querySelectorAll('[data-rank-size]').forEach(b => b.addEventListener('click', () => { rankSize = Number(b.dataset.rankSize); loadRanking(); }));
+  document.getElementById('rank-back').addEventListener('click', () => { rankRequest++; rankingPanel.hidden = true; setupPanel.hidden = rankingOrigin !== 'setup'; resultPanel.hidden = rankingOrigin !== 'result'; document.getElementById('pause-panel').hidden = rankingOrigin !== 'pause'; });
+  const pausePanel = document.getElementById('pause-panel');
+  function pauseGame() {
+    if (!running || paused) return;
+    paused = true; running = false; pausedAt = Date.now(); clearInterval(timer); clearTimeout(mismatch);
+    if (open.length === 2) { open.forEach(i => { if (!cards[i].done) cards[i].up = false; }); open = []; }
+    updateCards(); setupPanel.hidden = true; resultPanel.hidden = true; rankingPanel.hidden = true; pausePanel.hidden = false; overlay.hidden = false;
+    announcement.textContent = '遊戲暫停';
+  }
+  function resumeGame() {
+    if (!paused) return;
+    startedAt += Date.now() - pausedAt; paused = false; running = true; pausePanel.hidden = true; overlay.hidden = true; updateCards(); tick(); timer = setInterval(tick, 200); announcement.textContent = '繼續遊戲';
+  }
+  document.getElementById('pause').addEventListener('click', pauseGame);
+  document.getElementById('resume-game').addEventListener('click', resumeGame);
+  document.getElementById('pause-restart').addEventListener('click', () => { goldenNext = goldenMode; start(); });
+  document.getElementById('pause-choose').addEventListener('click', () => { goldenNext = goldenMode || goldenNext; chooseDifficulty(); });
+  document.getElementById('pause-ranking').addEventListener('click', () => openRanking('pause'));
+  document.getElementById('rank-form').addEventListener('submit', e => {
+    e.preventDefault(); if (rankSaved || rankSubmitting) return;
+    const message = document.getElementById('rank-message'), button = document.getElementById('rank-submit'); let name;
+    try { name = window.MemoryLeaderboard.nickname(document.getElementById('rank-name').value); } catch (err) { message.textContent = err.message; return; }
+    if (!goldenMode && name.toUpperCase() === 'DKEC') { goldenNext = true; message.textContent = '黃金模式已啟動，下一局分數 ×5！'; return; }
+    rankSubmitting = true; button.disabled = true; message.textContent = '正在登錄排行榜…'; const thisRun = runId;
+    window.MemoryLeaderboard.submit({nickname:goldenMode ? 'DKEC' : name,score:resultScore,difficulty:resultSize,golden:goldenMode}).then(() => { if (runId !== thisRun) return; rankSubmitting = false; rankSaved = true; button.textContent = '已登錄'; message.textContent = '成績已登錄排行榜！'; }).catch(err => { if (runId !== thisRun) return; rankSubmitting = false; button.disabled = false; message.textContent = err.message || '登錄失敗，請稍後再試。'; });
+  });
   difficultyButtons.forEach(button => button.addEventListener('click', () => chooseDifficulty(Number(button.dataset.size)))); chooseDifficulty();
 })();
+
+
+
 
 
 
