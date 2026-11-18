@@ -1,0 +1,11 @@
+{
+  "name": "小氣球鞋盒跑酷",
+  "short_name": "小氣球跑酷",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#26334a",
+  "theme_color": "#26334a",
+  "icons": [{"src": "assets/character-d.png", "sizes": "256x256", "type": "image/png"}]
+}
+
